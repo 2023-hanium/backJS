@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+          var socket=null;
+          var timer=null;
+          $(document).ready(function(){
+              socket=io.connect(); // nodejs->3000port
+              // 데이터를 수신하는 코드 
+              socket.on("socket_evt_mqtt", function(data){
+                   var data=JSON.parse(data);
+                   $(".mqttlist").html(
+                      "<li>"+data.tmp+"("+data.hum+"%)"+"</li>"
+                   );                   
+               });
+              if(timer==null){
+                  timer=window.setInterval("timer1()", 1000); // 1000->1초
+              }
+          });
+          function timer1(){
+              // 1초에 한번씩 nodejs쪽으로 데이터를 달라는 이벤트를 전달하는 역할
+              socket.emit("socket_evt_mqtt", JSON.stringify({}));
+              console.log("----------");
+          }  
+          function ledOnOff(value){
+              // {"led" : 1},  {"led" : 2}
+              socket.emit("socket_evt_led", JSON.stringify({led : Number(value)}));
+          }
+          function ajaxledOnOff(value){
+              if(value=="1") var value="on";
+              else if(value=="2") var value="off";
+              $.ajax({
+                  url : "http://172.30.1.44:3000/devices/led",
+                  type : "post",
+                  data : {"flag" : value},  // flag=on, flag=off
+                  success : ledStatus,
+                  error : function(){ alert("error"); }
+                });
+          }
+          function ledStatus(obj){
+               $("#led").html("<font color='red'>"+obj.led+"</font> 되었습니다.");
+          }
+    </script>
+    <style type="text/css">
+         body{
+             font-size: 12px;
+         }
+    </style>
+</head>
+<body bgcolor="#FFE200">
+    <fieldset>
+        <legend>사물인터넷 통신 프로젝트</legend>
+    <h2>socket 이용한 DHT11(온도:습도) 모니터링 서비스</h2> 
+    <div id="msg">
+        <div id="mqtt_logs">
+          <ul class="mqttlist"></ul>
+        </div>
+        <hr/>
+        <h2>socket 통신 방식(LED제어)</h2>
+        <button onclick="ledOnOff(1)">LED_ON</button>
+        <button onclick="ledOnOff(2)">LED_OFF</button>
+        <hr/>
+        <h2>RESTfull Service 통신 방식(LED제어)</h2>
+        <button onclick="ajaxledOnOff(1)">LED_ON</button>
+        <button onclick="ajaxledOnOff(2)">LED_OFF</button>
+        <div id="led">LED STATUS</div>
+      </div>
+    </fieldset>
+</body>
+</html>
