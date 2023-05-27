@@ -8,7 +8,7 @@ const http = require("http");
 const mongoose = require("mongoose");
 const deviceRouter = require("./routes/devices");
 const bodyParser = require("body-parser");
-require("dotenv/config");
+require("dotenv/config"); 
 
 app.use(express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false }));
